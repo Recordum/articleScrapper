@@ -54,9 +54,10 @@ def user_page():
     return render_template('index.html')
 
 @app.route('/logout', methods=['POST'])
+@jwt_required()
 def log_out():
     response = jsonify({"message" : "success"})
-    unset_jwt_cookies(response)
+    response.set_cookie("token", '', expires=0)
     return response
 
 if __name__ == '__main__':

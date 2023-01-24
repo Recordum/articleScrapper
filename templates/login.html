@@ -14,13 +14,20 @@
         }
     </style>
     <script>
-        function deleteCookie(name) {
-            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        }
         function logOut() {
                 alert("logout");
-                deleteCookie("token");
-                location.reload()
+            $.ajax({
+                type : "POST",
+                url : "/logout",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("Authorization","Bearer " + getCookie("token"));
+                },
+                data:{},
+                success : function (response){
+                    location.reload()
+                }
+            })
+
 
         }
         $(document).ready(function() {
@@ -32,10 +39,7 @@
                          xhr.setRequestHeader("Authorization","Bearer " + getCookie("token"));
                      },
                      success: function (response) {
-                            userHtml = 'Hello users!\n' +
-                                '    <div>\n' +
-                                '    <input type = \'submit\' onclick="logOut()">log-out!</input>\n' +
-                                '    </div>';
+                            userHtml = response
                             $('.wrap').append(userHtml);
                      }
                  });

@@ -39,9 +39,17 @@
         }
     </style>
     <script>
-        $(document).ready(function(){
-
+        $(document).ready(function (){
+            if(getCookie('access_token_cookie') !== undefined){
+                location.href = 'user-page'
+            }
         })
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
         function registerOpen() {
                 let registerForm = $('#register-form').css('display');
                 if (registerForm == 'block') {
@@ -65,7 +73,7 @@
             })
         }
         function login() {
-            let username = $('#login-username').val();
+            username = $('#login-username').val();
             let password = $('#login-password').val();
             console.log(username);
             $.ajax({
@@ -75,7 +83,7 @@
                 success : function (response){
                     alert(response['message']);
                     if(response['message'] === '환영합니다') {
-                        location.href = "userpage/" + `${username}`;
+                        location.href = "userpage";
                     }
                 }
             })

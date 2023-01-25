@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"/>
+    <script defer src="https://use.fontawesome.com/releases/v6.2.1/js/all.js"></script>
+    <style>
+        .login-box{
+            width: 800px;
+            border: black solid 2px;
+            border-radius: 5px;
+            margin :  auto;
+            padding: 20px;
+
+        }
+        .login-title{
+            text-align: center;
+            width: 800px;
+            height: 90px;
+            margin: auto;
+            font-size: 50px;
+        }
+        .login-box-footer{
+            border: 1px;
+        }
+        .forgot-password{
+            padding-left: 600px;
+        }
+        #register-form{
+            width: 800px;
+            border: black solid 2px;
+            border-radius: 5px;
+            margin :  auto;
+            padding: 20px;
+            display: none;
+        }
+    </style>
+    <script>
+        $(document).ready(function(){
+
+        })
+        function registerOpen() {
+                let registerForm = $('#register-form').css('display');
+                if (registerForm == 'block') {
+                    $('#register-form').hide();
+                } else {
+                    $('#register-form').show();
+                }
+        }
+        function register() {
+            const username = $('#register-username').val();
+            const email = $('#register-email').val();
+            const password = $('#register-password').val();
+
+            $.ajax({
+                type : "POST",
+                url : "users",
+                data : {username : username, email : email, password : password},
+                success : function (response){
+                    alert(response['message']);
+                }
+            })
+        }
+        function login() {
+            let username = $('#login-username').val();
+            let password = $('#login-password').val();
+            console.log(username);
+            $.ajax({
+                type : "POST",
+                url : "login",
+                data : {username : username, password : password},
+                success : function (response){
+                    alert(response['message']);
+                    if(response['message'] === '환영합니다') {
+                        location.href = "userpage/" + `${username}`;
+                    }
+                }
+            })
+
+
+        }
+    </script>
+</head>
+<body>
+    <div class = "login-page">
+        <div class="login-title">
+            <span><i class="fa-regular fa-compass"></i>Scrap-Your-Article</span>
+        </div>
+        <form class="login-box">
+            <div class="field">
+                <label class="label">ID</label>
+                <div class="control">
+                    <input id = "login-username" class="input" type="text">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Password</label>
+                <div class="control">
+                    <input id = 'login-password' class="input" type="password" placeholder="********">
+                </div>
+            </div>
+            <div class = "login-box-footer">
+                <a role ='button' onclick="login()" class="button is-primary">Login</a>
+                <a role = 'button' class="button is-primary" onclick="registerOpen()">Sign in</a>
+                <span class="forgot-password">비밀번호 찾기</span>
+            </div>
+        </form>
+        <form id = 'register-form'>
+            <div class="field">
+                <label class="label">Username</label>
+                <div class="control has-icons-left has-icons-right">
+                    <input id = 'register-username' class="input is-success" type="text" placeholder="Text input" value="bulma">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control has-icons-left has-icons-right">
+                    <input id = 'register-email' class="input is-danger" type="email" placeholder="Email input" value="hello@">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Password</label>
+                <div class="control has-icons-left has-icons-right">
+                    <input id = 'register-password' class="input is-success" type="text" placeholder="Text input" value="bulma">
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                    <button onclick="register()" class="button is-link">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

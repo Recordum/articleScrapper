@@ -69,6 +69,7 @@
                 data : {username : username, email : email, password : password},
                 success : function (response){
                     alert(response['message']);
+                    location.reload();
                 }
             })
         }
@@ -83,7 +84,7 @@
                 success : function (response){
                     alert(response['message']);
                     if(response['message'] === '환영합니다') {
-                        location.href = "userpage";
+                        location.href = "user-page";
                     }
                 }
             })

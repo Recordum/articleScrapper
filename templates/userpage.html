@@ -3,8 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <title>Article Scrapper</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"/>
+    <script defer src="https://use.fontawesome.com/releases/v6.2.1/js/all.js"></script>
+    <style>
+        .header{
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+
+        }
+        .header-title{
+            height: 100%;
+            font-size: 200%;
+            width: 290px;
+        }
+
+        .item{
+            heigth : 100%;
+        }
+        .edit-modal{
+            display: none;
+        }
+
+    </style>
+    <script>
+        $(document).ready(function (){
+            getArticle();
+            getArticleRank();
+        })
+        function logOut(){
+            $.ajax({
+                type : 'POST',
+                url : '/logout',
+                data:{},
+                success : function (response){
+                    location.href = '/';
+                }
+            })
+        }
+        function openModal() {
+            $('#post-modal').addClass('is-active');
+        }
+        function closeModal() {
+            $('#post-modal').removeClass('is-active');
+        }
+        function postArticle(){
+            let url = $('#posting-box-url').val();
+            let comment = $('#posting-box-comment').val();
+            let score = $('#posting-box-score').val();
+            $.ajax({
+                type: 'POST',
+                url : '/user-page/article',
+                data : {'url' : url, 'comment' : comment, 'score' : score},
+                success : function (response) {
+                    location.reload();
+                },
+                error : function (response) {
+                    alert("입력값이 유효하지 않습니다.");
+                }
+            })
+        }
+
+        function makeCard(url, title, comment, img, score, description) {
+            let tempHtml = `<div class="box">
+  <article class="media">
+    <div class="media-left">
+      <figure class="image is-64x64">
+        <img src="${img}" alt="Image">
+      </figure>
+    </div>
+    <div class="media-content">
+      <div class="content">
+        <p>
+          <a href="${url}"><strong>${title}</strong> <small>score : ${score}</small> </a>
+          <br>
+          ${description}
+        </p>
+        <p>
+                ${comment}
+        </p>
+      </div>
+      <nav class="level is-mobile">
+        <div class="level-left">
+          <a onclick="openEditModal(\'${title}'\)" class="level-item" aria-label="like">
+            <span class="icon is-small">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </span>Edit
+          </a>
+           <a onclick="deleteArticle(\'${title}'\)" class="level-item" aria-label="retweet">
+            <span class="icon is-small">
+              <i class="fa-solid fa-trash"></i>
+            </span>Delete
+          </a>
+        </div>
+      </nav>
+    </div>
+  </article>
+</div>`;
+
+            $('#article_post').append(tempHtml);
+
+        }
+
+        function getArticle(){
+            $.ajax({
+                type : "GET",
+                url : '/user-page/article',
+                data : {},
+                success : function (response) {
+                    for(let i = 0 ; i<response['articles'].length ; i++){
+                        let url = response['articles'][i]['url'];
+                        let title = response['articles'][i]['title'];
+                        let comment = response['articles'][i]['comment'];
+                        let img = response['articles'][i]['img'];
+                        let score = response['articles'][i]['score'];
+                        let description = response['articles'][i]['description'];
+
+                        makeCard(url, title, comment, img, score, description);
+                    }
+
+                }
+            })
+        }
+        function deleteArticle(title) {
+            $.ajax({
+                type : "DELETE",
+                url : 'user-page/article/' + title,
+                success : function (response){
+                    location.reload();
+                }
+            })
+        }
+        function openEditModal(title){
+            $('#edit-modal').addClass('is-active');
+            $('#edit-title').text(title);
+        }
+        function closeEditModal() {
+            $('#edit-modal').removeClass('is-active');
+        }
+        function editArticle() {
+            let comment = $('#edit-box-comment').val();
+            let score = $('#edit-box-score').val();
+            let title = $('#edit-title').text();
+              $.ajax({
+                  type : "POST",
+                  url : '/user-page/article/' + title,
+                  data : {'comment' : comment, 'score' : score},
+                  success : function (response){
+                         location.reload();
+                  }
+              })
+        }
+        function getArticleRank(){
+            $.ajax({
+                type : "GET",
+                url : 'user-page/article/rank',
+                data : {},
+                success : function (response){
+                    for(let i = 0; i < response['movies'].length; i++) {
+                        let title = response['movies'][i]['title'];
+                        let score = response['movies'][i]['score'];
+
+                        let tempHtml = `<tr>
+                                        <th>${i+1}</th>
+                                        <td><a>${title}</a>
+                                        </td>
+                                        <td>${score}</td>
+                                    </tr>`;
+                        $('#rank-table').append(tempHtml);
+                    }
+                }
+            })
+        }
+    </script>
 </head>
-<body>
-    환영합니다!
-</body>
+    <body>
+        <div class="header">
+            <div class="header-title"><span><i class="fa-regular fa-compass"></i>Scrap-Your-Article </span></div>
+            <div class="item item2">
+                <a class="button is-primary is-large" onclick="openModal()"><strong>POST!</strong></a>
+                <a class="button is-light is-large" onclick="logOut()"><strong>Log out</strong></a>
+            </div>
+        </div>
+
+        <div class="tile is-ancestor">
+            <div class="tile is-vertical is-8">
+                <div class="tile is-parent">
+                    <article class="tile is-child notification is-info">
+                        <p class="title">Your Articles</p>
+                        <div class="content" id = 'article_post'>
+                            <!-- Content -->
+                        </div>
+                    </article>
+                </div>
+                </div>
+                <div class="tile is-parent">
+                    <article class="tile is-child notification is-success">
+                        <div class="content">
+                            <p class="title">Article Ranking</p>
+                            <p class="subtitle">What is your favorite article?</p>
+                            <div class="content">
+                                <!-- Content -->
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th><abbr title="Position">Pos</abbr></th>
+                                        <th>Title</th>
+                                        <th><abbr title="Points">Score</abbr></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id = "rank-table">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+        <div class="modal" id="post-modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <!-- Any other Bulma elements you want -->
+                <form class="box">
+                    <div class="field">
+                        <label class="label">URL</label>
+                        <div class="control">
+                            <input class="input" id="posting-box-url" placeholder="URL 입력">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Comment</label>
+                        <div class="control">
+                            <textarea rows="4" cols="50" id = "posting-box-comment"></textarea>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Score</label>
+                        <div class="control">
+                            <input class="input" id="posting-box-score" placeholder="점수 입력">
+                        </div>
+                    </div>
+                    <a role="button" class="button is-primary" onclick="postArticle()">Save</a>
+                </form>
+            </div>
+            <button class="modal-close is-large" onclick="closeModal()" aria-label="close"></button>
+        </div>
+        <div class="modal" id="edit-modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <!-- Any other Bulma elements you want -->
+                <form class="box">
+                    <div>
+                        <p id = "edit-title"></p>
+                    </div>
+                    <div class="field">
+                        <label class="label">Comment</label>
+                        <div class="control">
+                            <textarea rows="4" cols="50" id = "edit-box-comment"></textarea>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Score</label>
+                        <div class="control">
+                            <input class="input" id="edit-box-score" placeholder="점수 입력">
+                        </div>
+                    </div>
+                    <a role="button" class="button is-primary" onclick="editArticle()">Save</a>
+                </form>
+            </div>
+            <button class="modal-close is-large" onclick="closeEditModal()" aria-label="close"></button>
+        </div>
+
+    </body>
 </html>

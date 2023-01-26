@@ -16,8 +16,6 @@ db = client.dbArticle
 def home():
     return render_template('home.html')
 
-
-
 @app.route('/login', methods = ['POST'])
 def log_in():
     user_name = request.form['username']
@@ -60,10 +58,16 @@ def user_page():
 def article():
     decode = decode_token(request.cookies['access_token_cookie'])
     username = decode['sub']
-    return username
     if request.method == 'POST':
         url = request.form['url']
         comment = request.form['comment']
+        try:
+            score = request.form['score']
+            score_validate = int(score)
+        except:
+            response = Response(status = 400)
+            return response
+
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}
         response = requests.get(url, headers = headers)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -74,58 +78,44 @@ def article():
         title = og_title['content']
         description = og_description['content']
         img = og_img['content']
-
-        db.scrap.insert_one({'username' : username, 'title' : title, 'description' : description, 'img' : img, 'comment' : comment, 'url': url })
-        return jsonify({'username' : username, 'title' : title, 'description' : description, 'img' : img, 'comment' : comment, 'url': url }),201
+        print(img,description,title)
+        db.scrap.insert_one({'username' : username, 'title' : title, 'description' : description, 'img' : img, 'comment' : comment, 'url': url ,'score' : score_validate})
+        return jsonify({'username' : username, 'title' : title, 'description' : description, 'img' : img, 'comment' : comment, 'url': url,'score' : score_validate }),201
     else:
-        articles = list(db.scrap.find({}, {}))
-        return jsonify(articles),200
+        articles = list(db.scrap.find({'username': username},{'_id' : False}))
+        return jsonify({'articles' : articles}),200
 
-@app.route('/user-page/article/<title>', methods = ['DELETE'])
-@jwt_required()
-def delete_article(title):
+@app.route('/user-page/article/<title>', methods = ['DELETE','POST'])
+@jwt_required(locations=['cookies'])
+def modify_article(title):
     decode = decode_token(request.cookies['access_token_cookie'])
     username = decode['sub']
-    db.scrap.delete_one({'username' : username, 'title' : title})
-    return jsonify({'username' : username, 'title' : title, 'message' : 'delete_success'})
 
-@app.route('/user-page/movie-rank', methods = ['GET','POST'])
+    if request.method == "DELETE":
+        db.scrap.delete_one({'username' : username, 'title' : title})
+        return jsonify({'username' : username, 'title' : title, 'message' : 'delete_success'})
+    else:
+        comment = request.form['comment']
+        try:
+            score = request.form['score']
+            score_validate = int(score)
+        except:
+            response = Response(status = 400)
+            return response
+
+        db.scrap.update_many({'username' : username, 'title' : title}, {'$set':{'comment' : comment, 'score' : score_validate}})
+        return jsonify({'comment' : comment, 'score' : score_validate})
+@app.route('/user-page/article/rank', methods = ['GET'])
 @jwt_required(locations=['cookies'])
 def movie_rank():
     decode = decode_token(request.cookies['access_token_cookie'])
     username = decode['sub']
-    if request.method == 'POST':
-        url = request.form['url']
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}
-        response = requests.get(url, headers = headers)
-        soup = BeautifulSoup(response.text, 'html.parser')
 
-        og_title = soup.select_one('meta[property="og:title"]')
-        og_img = soup.select_one('meta[property="og:image"]')
+    movies = list(db.scrap.find({'username' : username},{'_id' : False}))
+    movies_sorted = sorted(movies, key = lambda x: x['score'], reverse = True)
+    print(movies_sorted)
+    return jsonify({'movies' : movies_sorted})
 
-        title = og_title['content']
-        img = og_img['content']
-
-        db.moives.insert_one({'username' : username, 'title' : title, 'img' : img, 'like' : 0})
-        return jsonify({'username' : username, 'title' : title, 'img' : img }),201
-    else:
-        movies = list(db.moives.find({},{'_id' : False}))
-        movies_sorted = sorted(movies, key = lambda x: x['like'], reverse = True)
-        return jsonify(movies_sorted)
-@app.route('/username/movie-rank/<title>', methods = ['DELETE','POST'])
-@jwt_required()
-def movie_modify(title):
-    decode = decode_token(request.cookies['access_token_cookie'])
-    username = decode['sub']
-    if request.method == "DELETE":
-        db.moives.delete_one({'username' : username, 'title' : title})
-        return jsonify({'username' : username, 'title' : title})
-    else:
-        movie = db.moives.find_one({'username' : username, 'title' : title})
-        like_count = movie['like']
-        like_count = like_count + 1
-        db.moives.update_many({'username' : username, 'title' : title}, {'$set' : {'like' : like_count}})
-        return jsonify({'username' : username, 'title' : title, 'like' : like_count})
 @app.route('/logout', methods=['POST'])
 @jwt_required(locations=['cookies'])
 def log_out():

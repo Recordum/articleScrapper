@@ -122,8 +122,15 @@ def log_out():
     response = jsonify({"message" : "success"})
     response.set_cookie("access_token_cookie", '', expires=0)
     return response
+@app.route('/users/passsword', methods=['POST'])
+def find_password():
+    username = request.form['username']
+    email = request.form['email']
 
-
-
+    user_info = db.userinfo.find_one({'username':username, 'email' :email})
+    if user_info == None:
+        return jsonify({'message' : '미등록된 Email 또는 ID 입니다.'})
+    else :
+        return jsonify({'message' : user_info['password']})
 if __name__ == '__main__':
     app.run('0.0.0.0',port=5000,debug=True)

@@ -39,7 +39,8 @@
         }
     </style>
     <script>
-        $(document).ready(function (){
+
+    $(document).ready(function (){
             if(getCookie('access_token_cookie') !== undefined){
                 location.href = 'user-page'
             }
@@ -91,6 +92,24 @@
 
 
         }
+        function openModal() {
+            $('#find-password').addClass('is-active');
+        }
+        function closeModal() {
+            $('#find-password').removeClass('is-active');
+        }
+        function findPassword() {
+            let username = $('#username-find').val();
+            let email = $('#email-find').val();
+            $.ajax({
+                type : "POST",
+                url : 'users/passsword',
+                data : {'username' : username, 'email' : email},
+                success : function (response){
+                    alert(response['message']);
+                }
+            })
+        }
     </script>
 </head>
 <body>
@@ -114,7 +133,7 @@
             <div class = "login-box-footer">
                 <a role ='button' onclick="login()" class="button is-primary">Login</a>
                 <a role = 'button' class="button is-primary" onclick="registerOpen()">Sign in</a>
-                <span class="forgot-password">비밀번호 찾기</span>
+                <a role="button" class="forgot-password" onclick="openModal()" style="color: black">비밀번호 찾기</a>
             </div>
         </form>
         <form id = 'register-form'>
@@ -145,6 +164,31 @@
                 </div>
             </div>
         </form>
+        <div class="modal" id="find-password">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <!-- Any other Bulma elements you want -->
+                <form class="box">
+                    <div>
+                        <p id = "find-title">비밀번호 찾기</p>
+                    </div>
+                    <div class="field">
+                        <label class="label">username</label>
+                        <div class="control">
+                            <input class="input" id="username-find" placeholder="아이디 입력">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Email</label>
+                        <div class="control">
+                            <input class="input" id="email-find" placeholder="이메일 입력">
+                        </div>
+                    </div>
+                    <a role="button" class="button is-primary" onclick="findPassword()">Save</a>
+                </form>
+            </div>
+            <button class="modal-close is-large" onclick="closeModal()" aria-label="close"></button>
+        </div>
     </div>
 </body>
 </html>

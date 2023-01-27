@@ -3,12 +3,13 @@ from pymongo import MongoClient
 from bs4 import BeautifulSoup
 from flask_jwt_extended import *
 import requests
+import dp_path
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "secret"
 jwt = JWTManager(app)
 
-client = MongoClient('localhost', 27017)
+client = MongoClient(dp_path.mongodPath['dbinfo'], 27017)
 db = client.dbArticle
 
 
